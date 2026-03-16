@@ -1,0 +1,6 @@
+This file pretends to be extracted from an archive.
+
+Executable detected:
+invoice_2024.pdf.exe
+
+cmd.exe /c powershell -nop -EncodedCommand SQBuAHYAbwBrAGUALQBFAHgAcAByAGUAcwBzAGkAbwBuAA==

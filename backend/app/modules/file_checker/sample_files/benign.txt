@@ -1,0 +1,7 @@
+This is a normal text file.
+
+It contains general information about a project,
+documentation notes, and harmless text.
+
+No execution commands.
+No suspicious keywords.

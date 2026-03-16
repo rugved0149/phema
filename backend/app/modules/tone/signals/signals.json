@@ -1,0 +1,276 @@
+{
+    "urgency": {
+        "weight": 2,
+        "phrases": [
+            "act now",
+            "immediate action required",
+            "immediately",
+            "action required",
+            "urgent action required: unusual activity detected",
+            "final notice",
+            "final warning",
+            "final reminder: you have an unpaid toll",
+            "action required: password expiration",
+            "action required: password update required",
+            "within <TIME_LIMIT>",
+            "last chance",
+            "re: invoice",
+            "re: missing invoice",
+            "please complete these steps to avoid account closure",
+            "urgent",
+            "respond today",
+            "by the end of today",
+            "time is running out",
+            "<TIME_LIMIT>",
+            "password expires today",
+            "expires today",
+            "expires in 24 hours",
+            "deleted today",
+            "deleted within 24 hours"
+        ],
+        "explanation": "Creates time pressure to force quick action"
+    },
+    "authority": {
+        "weight": 3,
+        "phrases": [
+            "security department",
+            "bank official",
+            "bank verification",
+            "official notice",
+            "government",
+            "authorized team",
+            "customer support",
+            "support team",
+            "case id",
+            "tax department",
+            "internal revenue service",
+            "irs",
+            "tax refund",
+            "government refund",
+            "it helpdesk",
+            "it support",
+            "income tax department",
+            "tax authority",
+            "government tax",
+            "tax refund pending"
+        ],
+        "explanation": "Claims authority or official status"
+    },
+    "threat": {
+        "weight": 4,
+        "phrases": [
+            "account will be blocked",
+            "legal action will be taken",
+            "your account will be locked",
+            "your account will be suspended",
+            "legal action",
+            "service suspended",
+            "service will be stopped",
+            "penalty will be charged",
+            "arrest warrant"
+        ],
+        "explanation": "Uses fear of negative consequences"
+    },
+    "instruction": {
+        "weight": 3,
+        "phrases": [
+            "click the link",
+            "verify now",
+            "share otp",
+            "confirm your details",
+            "download the app",
+            "call this number",
+            "download and run",
+            "use your company credential"
+        ],
+        "explanation": "Pushes the user to perform immediate actions"
+    },
+    "reassurance": {
+        "weight": 2,
+        "phrases": [
+            "do not worry",
+            "we will help",
+            "safe process",
+            "stay calm",
+            "quick verification"
+        ],
+        "explanation": "Attempts to reduce suspicion after applying pressure"
+    },
+    "polite_authority": {
+        "weight": 2,
+        "phrases": [
+            "we noticed unusual activity",
+            "during a routine review",
+            "as part of a routine review",
+            "would you kindly",
+            "for your convenience",
+            "please review",
+            "please confirm",
+            "kindly confirm",
+            "to ensure uninterrupted service",
+            "to maintain service continuity"
+        ],
+        "explanation": "Uses polite and professional authority framing to encourage compliance"
+    },
+    "implicit_instruction": {
+        "weight": 2,
+        "phrases": [
+            "please confirm",
+            "please review the attached",
+            "confirm the attached document",
+            "review the attached document",
+            "reply to this email",
+            "respond to this message",
+            "update immediately",
+            "reset immediately",
+            "update card",
+            "update payment method"
+        ],
+        "explanation": "Encourages action without explicit commands"
+    },
+    "conditional_pressure": {
+        "weight": 3,
+        "phrases": [
+            "failure to comply",
+            "may result in",
+            "could result in",
+            "if verification is not completed",
+            "if we do not hear from you",
+            "restricted access",
+            "limited access",
+            "to avoid penalty",
+            "avoid late fees",
+            "to avoid disconnection",
+            "failure to pay will result in disconnection"
+        ],
+        "explanation": "Uses conditional consequences to pressure compliance"
+    },
+    "vague_threat": {
+        "weight": 2,
+        "phrases": [
+            "account has been flagged",
+            "unusual activity detected",
+            "issue detected with your account",
+            "potential issue identified"
+        ],
+        "explanation": "Mentions a problem without clearly stating consequences"
+    },
+    "credential_harvest": {
+        "weight": 5,
+        "phrases": [
+            "enter your credentials",
+            "verify your details",
+            "confirm your identity",
+            "login to your account",
+            "update your account details",
+            "sign in to your account",
+            "enter your details",
+            "enter details",
+            "submit your details",
+            "provide your details",
+            "update your information",
+            "submit details",
+            "provide details",
+            "update tax details"
+        ],
+        "explanation": "Attempts to obtain sensitive authentication information"
+    },
+    "payload_delivery": {
+        "weight": 4,
+        "phrases": [
+            "download the attached file",
+            "open the attachment",
+            "attached document",
+            "download and open",
+            "see attached invoice"
+        ],
+        "explanation": "Attempts to deliver malicious attachments or files"
+    },
+    "account_lockout": {
+        "weight": 4,
+        "phrases": [
+            "account has been locked",
+            "account will be blocked",
+            "account access restricted",
+            "restore access",
+            "account suspended",
+            "access suspended",
+            "recover access",
+            "restore access now",
+            "unlock your account",
+            "avoid losing access",
+            "losing access",
+            "access will be lost",
+            "account on hold",
+            "account placed on hold",
+            "billing account suspended",
+            "email will be deleted",
+            "account will be deleted",
+            "profile will be deleted"
+        ],
+        "explanation": "Threatens loss of account access to force compliance"
+    },
+    "service_penalty": {
+        "weight": 4,
+        "phrases": [
+            "result in penalties",
+            "service disruption",
+            "penalty will be charged",
+            "additional charges",
+            "service will be disrupted",
+            "billing issues will occur",
+            "pay small fee",
+            "reschedule delivery",
+            "delivery failed",
+            "parcel pending",
+            "invoice overdue",
+            "payment overdue",
+            "overdue invoice",
+            "electricity disconnection",
+            "power will be disconnected",
+            "service disconnection notice",
+            "payment declined",
+            "subscription payment failed"
+        ],
+        "explanation": "Uses financial or service penalties to coerce immediate action"
+    },
+    "payment_request": {
+        "weight": 4,
+        "phrases": [
+            "make a payment",
+            "send payment",
+            "pay immediately",
+            "gift card",
+            "wire transfer",
+            "crypto payment",
+            "upi payment",
+            "update billing info",
+            "update payment information",
+            "update card details"
+        ],
+        "explanation": "Attempts to solicit unauthorized payments"
+    },
+    "reward_bait": {
+        "weight": 4,
+        "phrases": [
+            "you have won",
+            "congratulations you have won",
+            "claim your prize",
+            "claim your reward",
+            "you are selected as a winner",
+            "lucky winner",
+            "free gift",
+            "gift card reward",
+            "cash reward",
+            "coupon reward",
+            "you won",
+            "won a free",
+            "free iphone",
+            "free reward",
+            "claim now",
+            "limited time reward",
+            "prize money"
+        ],
+        "explanation": "Uses unexpected rewards or prizes to lure the recipient into taking action"
+    }
+}
