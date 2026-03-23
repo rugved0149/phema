@@ -9,6 +9,7 @@ from app.modules.anomaly.engine import run_anomaly
 from app.modules.tone.engine import run_tone_analysis
 from app.core.safe_runner import run_safe
 
+
 class PHEMAEngine:
     """
     Central orchestrator that triggers detection modules.
@@ -50,4 +51,12 @@ class PHEMAEngine:
                 run_anomaly,
                 entity_id,
                 session_context
+            )
+
+        if text:
+            run_safe(
+                "tone",
+                run_tone_analysis,
+                text,
+                entity_id
             )

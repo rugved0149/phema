@@ -1,16 +1,12 @@
 from fastapi import APIRouter, Query
 from typing import List
-
+from app.core.dependencies import event_store, correlator, risk_scorer
 from app.correlation.sqlite_event_store import SQLiteEventStore
 from app.correlation.correlator import Correlator
 from app.correlation.risk_scoring import RiskScorer
 from app.correlation.schemas import EntityType
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
-
-event_store = SQLiteEventStore()
-correlator = Correlator(event_store)
-risk_scorer = RiskScorer()
 
 @router.get("/events/{entity_type}/{entity_id}")
 def get_event_timeline(

@@ -1,59 +1,173 @@
-# app/correlation/mitre_mapper.py
-
-from typing import List, Set
+from typing import List, Dict, Set
 
 
-MITRE_MODULE_MAP = {
+# -------------------------
+# MITRE MAPPING (MODULE LEVEL)
+# -------------------------
+
+MODULE_TO_MITRE = {
     "phishing": [
-        ("T1566", "Phishing"),
+        {"id": "T1566", "name": "Phishing"}
     ],
-
     "tone": [
-        ("T1566.002", "Spearphishing Link"),
+        {"id": "T1566", "name": "Social Engineering"}
     ],
-
     "file_checker": [
-        ("T1204", "User Execution"),
-        ("T1059", "Command Execution"),
+        {"id": "T1204", "name": "User Execution"}
     ],
-
     "honeypot": [
-        ("T1190", "Exploit Public-Facing Application"),
+        {"id": "T1046", "name": "Network Service Discovery"}
+    ],
+    "anomaly": [
+        {"id": "T1078", "name": "Valid Accounts"}
+    ]
+}
+
+
+# -------------------------
+# SIGNAL LEVEL (STRUCTURED)
+# key = final signal token
+# -------------------------
+
+SIGNAL_TO_MITRE = {
+
+    # Credential harvesting
+    "credential_harvest": [
+        {"id": "T1556", "name": "Credential Harvesting"}
     ],
 
-    "anomaly": [
-        ("T1078", "Valid Accounts"),
-        ("T1036", "Masquerading"),
+    # Obfuscation
+    "high_entropy": [
+        {"id": "T1027", "name": "Obfuscated Files"}
+    ],
+
+    # Suspicious execution indicators
+    "suspicious_string": [
+        {"id": "T1059", "name": "Command Execution"}
+    ],
+
+    # Honeypot
+    "shadow_ban": [
+        {"id": "T1562", "name": "Defense Evasion"}
+    ],
+
+    "block": [
+        {"id": "T1078", "name": "Account Blocking Response"}
+    ],
+
+    # Phishing brand impersonation
+    "impersonation": [
+        {"id": "T1566.002", "name": "Spearphishing Link"}
     ]
 }
 
 
-MITRE_SIGNAL_MAP = {
-    "credential_harvest": ("T1556", "Modify Authentication Process"),
-    "payload_delivery": ("T1204", "User Execution"),
-    "brand_impersonation": ("T1566", "Phishing"),
+# -------------------------
+# ATTACK TYPE LEVEL
+# -------------------------
+
+ATTACK_TYPE_TO_MITRE = {
+
+    "social_engineering": [
+        {"id": "T1566", "name": "Phishing"}
+    ],
+
+    "malware_delivery": [
+        {"id": "T1204", "name": "User Execution"}
+    ],
+
+    "credential_harvesting": [
+        {"id": "T1556", "name": "Credential Harvesting"}
+    ],
+
+    "intrusion_attempt": [
+        {"id": "T1046", "name": "Network Discovery"}
+    ]
 }
 
 
-def map_to_mitre(modules: Set[str], signals: List[str]):
+# -------------------------
+# HELPER FUNCTION
+# -------------------------
 
-    techniques = []
+def extract_signal_token(signal: str) -> str:
+    """
+    Extract final signal component from structured signal.
 
-    # Module-based mapping
+    Example:
+        'file:obfuscation:high_entropy'
+        → 'high_entropy'
+    """
+
+    if not signal:
+        return ""
+
+    parts = signal.split(":")
+
+    return parts[-1] if parts else signal
+
+
+# -------------------------
+# MAIN FUNCTION
+# -------------------------
+
+def map_to_mitre(
+    modules: Set[str],
+    signals: List[str],
+    attack_type: str = None
+) -> List[Dict]:
+
+    results: List[Dict] = []
+    seen = set()
+
+    # -------------------------
+    # MODULE LEVEL
+    # -------------------------
+
     for module in modules:
-        if module in MITRE_MODULE_MAP:
-            techniques.extend(MITRE_MODULE_MAP[module])
 
-    # Signal-based mapping
+        techniques = MODULE_TO_MITRE.get(module, [])
+
+        for t in techniques:
+
+            if t["id"] not in seen:
+
+                results.append(t)
+                seen.add(t["id"])
+
+    # -------------------------
+    # SIGNAL LEVEL
+    # -------------------------
+
     for signal in signals:
-        for key in MITRE_SIGNAL_MAP:
-            if key in signal:
-                techniques.append(MITRE_SIGNAL_MAP[key])
 
-    # Remove duplicates
-    techniques = list(set(techniques))
+        token = extract_signal_token(signal)
 
-    return [
-        f"{tech_id}: {name}"
-        for tech_id, name in techniques
-    ]
+        techniques = SIGNAL_TO_MITRE.get(token, [])
+
+        for t in techniques:
+
+            if t["id"] not in seen:
+
+                results.append(t)
+                seen.add(t["id"])
+
+    # -------------------------
+    # ATTACK TYPE LEVEL
+    # -------------------------
+
+    if attack_type:
+
+        techniques = ATTACK_TYPE_TO_MITRE.get(
+            attack_type,
+            []
+        )
+
+        for t in techniques:
+
+            if t["id"] not in seen:
+
+                results.append(t)
+                seen.add(t["id"])
+
+    return results

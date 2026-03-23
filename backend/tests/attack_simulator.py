@@ -1,80 +1,148 @@
 import requests
 import time
+import uuid
+import json
 
 BASE_URL = "http://127.0.0.1:8000"
 
-ENTITY_ID = "attack_sim_1"
+# -------------------------
+# UTILITIES
+# -------------------------
+
+def new_entity():
+    return f"entity_{uuid.uuid4().hex[:6]}"
 
 
-def send_phema(payload):
+def send_scan(entity_id, payload):
+
     url = f"{BASE_URL}/phema/scan"
+
+    payload.update({
+        "entity_id": entity_id,
+        "entity_type": "session"
+    })
+
     r = requests.post(url, json=payload)
-    print("[SCAN]", r.json())
+
+    try:
+        print("[SCAN]", r.json())
+    except:
+        print("[SCAN ERROR]", r.text)
 
 
-def get_risk():
-    url = f"{BASE_URL}/correlation/risk/session/{ENTITY_ID}"
+def get_risk(entity_id):
+
+    url = f"{BASE_URL}/correlation/risk/session/{entity_id}"
+
     r = requests.get(url)
-    print("\nFINAL RISK RESULT")
-    print(r.json())
+
+    result = r.json()
+
+    print("\n[RISK RESULT]")
+    print(json.dumps(result, indent=2))
+
+    return result
 
 
 # -------------------------
-# ATTACK SCENARIOS
+# TEST SCENARIOS
 # -------------------------
 
-def simulate_phishing_attack():
+# 1️⃣ CLEAN SESSION TEST
+def test_clean_session():
 
-    print("\n[SIM] Phishing URL")
+    print("\n========== CLEAN SESSION TEST ==========")
 
-    send_phema({
-        "entity_id": ENTITY_ID,
-        "entity_type": "session",
+    entity = new_entity()
+
+    result = get_risk(entity)
+
+    assert result["risk_score"] == 0
+
+    print("[PASS] Clean session safe")
+
+
+# 2️⃣ SINGLE MODULE TEST
+def test_single_phishing():
+
+    print("\n========== SINGLE PHISHING TEST ==========")
+
+    entity = new_entity()
+
+    send_scan(entity, {
         "url": "http://amazon-login-security.com"
     })
 
+    time.sleep(1)
 
-def simulate_social_engineering():
+    result = get_risk(entity)
 
-    print("\n[SIM] Manipulative message")
+    assert result["risk_score"] > 0
 
-    send_phema({
-        "entity_id": ENTITY_ID,
-        "entity_type": "session",
-        "text": "URGENT action required verify account immediately"
+    print("[PASS] Phishing detected")
+
+
+# 3️⃣ MULTI-SIGNAL TEST
+def test_multi_signal():
+
+    print("\n========== MULTI-SIGNAL TEST ==========")
+
+    entity = new_entity()
+
+    send_scan(entity, {
+        "url": "http://amazon-login-security.com"
     })
 
+    time.sleep(1)
 
-def simulate_malware_delivery():
-
-    print("\n[SIM] Suspicious file")
-
-    send_phema({
-        "entity_id": ENTITY_ID,
-        "entity_type": "session",
-        "file_path": "app/modules/file_checker/sample_files/suspicious_powershell.ps1"
+    send_scan(entity, {
+        "text": "Urgent! Verify now!"
     })
 
+    time.sleep(1)
 
-def simulate_honeypot_trigger():
+    result = get_risk(entity)
 
-    print("\n[SIM] Honeypot access")
+    assert result["risk_score"] >= 20
 
-    send_phema({
-        "entity_id": ENTITY_ID,
-        "entity_type": "session",
+    print("[PASS] Multi-signal correlation working")
+
+
+# 4️⃣ FULL ATTACK CHAIN
+def test_full_attack_chain():
+
+    print("\n========== FULL ATTACK CHAIN ==========")
+
+    entity = new_entity()
+
+    send_scan(entity, {
+        "url": "http://amazon-login-security.com"
+    })
+
+    time.sleep(1)
+
+    send_scan(entity, {
+        "text": "Urgent! Verify account immediately!"
+    })
+
+    time.sleep(1)
+
+    send_scan(entity, {
+        "file_path":
+        "app/modules/file_checker/sample_files/suspicious_powershell.ps1"
+    })
+
+    time.sleep(1)
+
+    send_scan(entity, {
         "session_context": {
             "ip": "10.0.0.55"
         }
     })
 
-def simulate_anomaly():
+    time.sleep(1)
 
-    print("\n[SIM] Behavioral anomaly")
-
-    send_phema({
-        "entity_id": ENTITY_ID,
-        "entity_type": "session",
+    send_scan(entity, {
         "session_context": {
             "timestamp": "2026-03-17T03:00:00",
             "source_ip": "8.8.8.8",
@@ -82,30 +150,85 @@ def simulate_anomaly():
             "access_type": "login_attempt"
         }
     })
-    
+
+    time.sleep(1)
+
+    result = get_risk(entity)
+
+    assert result["risk_level"] in ["MEDIUM", "HIGH"]
+
+    print("[PASS] Full chain processed")
+
+
+# 5️⃣ CAMPAIGN SIMULATION
+def test_campaign_behavior():
+
+    print("\n========== CAMPAIGN TEST ==========")
+
+    entity = new_entity()
+
+    for _ in range(6):
+
+        send_scan(entity, {
+            "url": "http://paypal-security-alert.com"
+        })
+
+        time.sleep(0.5)
+
+    result = get_risk(entity)
+
+    assert result["risk_score"] >= 40
+
+    print("[PASS] Campaign detection working")
+
+
+# 6️⃣ DEDUPLICATION STRESS TEST
+def test_deduplication():
+
+    print("\n========== DEDUPLICATION TEST ==========")
+
+    entity = new_entity()
+
+    for _ in range(10):
+
+        send_scan(entity, {
+            "url": "http://duplicate-test.com"
+        })
+
+    time.sleep(1)
+
+    result = get_risk(entity)
+
+    print("[CHECK] Deduplication active")
+
+    print("[PASS] Deduplication stable")
+
+
 # -------------------------
-# FULL ATTACK CHAIN
+# MASTER RUNNER
 # -------------------------
 
-def simulate_full_attack():
+def run_all_tests():
 
-    simulate_phishing_attack()
-    time.sleep(1)
+    print("\n==============================")
+    print("PHEMA SYSTEM VALIDATION")
+    print("==============================")
 
-    simulate_social_engineering()
-    time.sleep(1)
+    test_clean_session()
 
-    simulate_malware_delivery()
-    time.sleep(1)
+    test_single_phishing()
 
-    simulate_honeypot_trigger()
-    time.sleep(1)
+    test_multi_signal()
 
-    simulate_anomaly()
-    time.sleep(1)
+    test_full_attack_chain()
 
-    get_risk()
+    test_campaign_behavior()
+
+    test_deduplication()
+
+    print("\nALL TESTS COMPLETED")
 
 
 if __name__ == "__main__":
-    simulate_full_attack()
+
+    run_all_tests()

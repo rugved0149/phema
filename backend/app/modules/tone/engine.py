@@ -4,11 +4,14 @@ from app.modules.tone.analyzer import analyze_text
 
 def run_tone_analysis(text: str, entity_id: str):
 
+    if not text or not text.strip():
+        return
+
     result = analyze_text(text)
 
-    risk_level = result.get("risk_level")
+    risk_level = result.get("risk_level", "low")
     detected_tones = result.get("detected_tones", [])
-    ml_probability = result.get("ml_probability")
+    ml_probability = result.get("ml_probability", 0.0)
 
     severity_map = {
         "low": "low",
@@ -18,17 +21,43 @@ def run_tone_analysis(text: str, entity_id: str):
 
     severity = severity_map.get(risk_level, "medium")
 
+    # -------------------------
+    # NO SIGNALS CASE
+    # -------------------------
+    if not detected_tones:
+        return
+
+    # -------------------------
+    # DETAILED SIGNAL EVENTS
+    # -------------------------
     for tone in detected_tones:
 
         send_event(
             entity_id=entity_id,
             entity_type="session",
             module="tone",
-            signal=f"tone:{tone}",
+            signal=f"tone:manipulation:{tone}",  # ✅ FIXED
             confidence=0.8,
             severity=severity,
             metadata={
                 "ml_probability": ml_probability,
                 "text_sample": text[:120]
+            }
+        )
+
+    # -------------------------
+    # ESCALATION SIGNAL (ML BOOST)
+    # -------------------------
+    if ml_probability >= 0.75:
+
+        send_event(
+            entity_id=entity_id,
+            entity_type="session",
+            module="tone",
+            signal="tone:ml:high_confidence",  # ✅ FIXED
+            confidence=ml_probability,
+            severity="high",
+            metadata={
+                "ml_probability": ml_probability
             }
         )

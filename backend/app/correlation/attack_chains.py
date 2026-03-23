@@ -2,29 +2,43 @@ ATTACK_CHAINS = [
 
     {
         "name": "social_engineering_attack",
-        "modules": {"phishing", "tone"},
-        "score_bonus": 20,
-        "reason": "Phishing link combined with manipulative tone"
-    },
 
-    {
-        "name": "credential_harvest_attack",
-        "signals": {"tone:credential_harvest", "phishing"},
-        "score_bonus": 25,
-        "reason": "Credential harvesting pattern detected"
+        "sequence": [
+            "phishing",
+            "tone"
+        ],
+
+        "score_bonus": 20,
+
+        "reason":
+            "Phishing followed by manipulation"
     },
 
     {
         "name": "malware_delivery",
-        "modules": {"phishing", "file_checker"},
+
+        "sequence": [
+            "phishing",
+            "file_checker"
+        ],
+
         "score_bonus": 30,
-        "reason": "Phishing vector delivering suspicious file"
+
+        "reason":
+            "Phishing delivered suspicious file"
     },
 
     {
-        "name": "active_intrusion",
-        "modules": {"honeypot", "anomaly"},
+        "name": "intrusion",
+
+        "sequence": [
+            "honeypot",
+            "anomaly"
+        ],
+
         "score_bonus": 40,
-        "reason": "Intrusion behavior detected through honeypot interaction"
+
+        "reason":
+            "Intrusion behavior detected"
     }
 ]

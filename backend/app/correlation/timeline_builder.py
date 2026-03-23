@@ -3,6 +3,13 @@
 from typing import List, Dict
 from app.correlation.schemas import CorrelationEvent
 
+PHASE_MAP = {
+    "phishing": "Recon",
+    "tone": "Delivery",
+    "file_checker": "Execution",
+    "honeypot": "Interaction",
+    "anomaly": "Post-Access"
+}
 
 def build_timeline(events: List[CorrelationEvent]) -> List[Dict]:
     """
@@ -18,11 +25,16 @@ def build_timeline(events: List[CorrelationEvent]) -> List[Dict]:
     timeline = []
 
     for event in events_sorted:
+
         timeline.append({
-            "time": event.timestamp.strftime("%H:%M:%S"),
-            "module": event.module.value,
-            "signal": event.signal,
-            "severity": event.severity.value
-        })
+        "time": event.timestamp,
+        "module": event.module.value,
+        "signal": event.signal,
+        "severity": event.severity.value,
+        "phase": PHASE_MAP.get(
+            event.module.value,
+            "Unknown"
+        )
+    })
 
     return timeline

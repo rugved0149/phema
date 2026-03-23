@@ -1,5 +1,5 @@
 from typing import Dict
-
+from app.correlation.schemas import CorrelationEvent, EntityType, ModuleName, SeverityLevel
 
 def build_signal(
     entity_id: str,
@@ -14,12 +14,12 @@ def build_signal(
     Standardizes signals emitted by modules.
     """
 
-    return {
-        "entity_id": entity_id,
-        "entity_type": entity_type,
-        "module": module,
-        "signal": signal,
-        "confidence": confidence,
-        "severity": severity,
-        "metadata": metadata
-    }
+    return CorrelationEvent(
+        entity_id=entity_id,
+        entity_type=EntityType(entity_type),
+        module=ModuleName(module),
+        signal=signal,
+        confidence=confidence,
+        severity=SeverityLevel(severity),
+        metadata=metadata
+    )
