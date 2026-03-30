@@ -1,15 +1,9 @@
-# app/db/session.py
-
 from sqlalchemy import Column, String, Float, DateTime, JSON, Index
 from datetime import datetime
-
 from app.db.base import Base
-
 
 class EventRecord(Base):
     __tablename__ = "events"
-
-    # PRIMARY KEY
 
     event_id = Column(
         String,
@@ -17,7 +11,19 @@ class EventRecord(Base):
         index=True
     )
 
-    # CORE INDEXED FIELDS
+    user_id = Column(
+        String,
+        index=True,
+        nullable=False,
+        default="system"
+    )
+
+    session_id = Column(
+        String,
+        index=True,
+        nullable=False,
+        default="default"
+    )
 
     entity_id = Column(
         String,
@@ -52,14 +58,10 @@ class EventRecord(Base):
         nullable=False
     )
 
-    # METADATA
-
     event_metadata = Column(
         JSON,
         nullable=True
     )
-
-    # TIMESTAMP (CRITICAL INDEX)
 
     timestamp = Column(
         DateTime,
@@ -68,10 +70,64 @@ class EventRecord(Base):
         nullable=False
     )
 
-# COMPOSITE INDEXES
+class SessionRecord(Base):
 
+    __tablename__="sessions"
+
+    session_id=Column(
+        String,
+        primary_key=True,
+        index=True
+    )
+
+    user_id=Column(
+        String,
+        index=True,
+        nullable=False
+    )
+
+    created_at=Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False
+    )
+
+    status=Column(
+        String,
+        index=True,
+        nullable=False,
+        default="CREATED"
+    )
+
+    last_activity=Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+        index=True
+    )
+
+    peak_risk_score=Column(
+        Float,
+        default=0,
+        nullable=False
+    )
+
+    peak_risk_level=Column(
+        String,
+        default="LOW",
+        nullable=False
+    )
+
+    peak_risk_timestamp=Column(
+        DateTime,
+        nullable=True,
+        index=True
+    )
+    
 Index(
     "idx_entity_lookup",
+    EventRecord.user_id,
+    EventRecord.session_id,
     EventRecord.entity_type,
     EventRecord.entity_id,
     EventRecord.timestamp

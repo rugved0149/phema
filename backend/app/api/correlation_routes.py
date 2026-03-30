@@ -1,189 +1,240 @@
 from fastapi import APIRouter
 from typing import Dict
+
 from app.core.event_emitter import emit_event
 from app.correlation.schemas import CorrelationEvent, EntityType
-from app.correlation.sqlite_event_store import SQLiteEventStore
-from app.correlation.correlator import Correlator
-from app.correlation.risk_scoring import RiskScorer
 from app.correlation.explanation_engine import generate_explanation
 from app.correlation.graph_engine import build_graph
 from app.correlation.threat_memory import threat_memory
 from app.correlation.analytics_engine import AnalyticsEngine
 from app.correlation.attack_replay import build_attack_replay
 from app.correlation.live_feed import get_latest_events
+
 from app.core.dependencies import event_store, correlator, risk_scorer
-router = APIRouter(prefix="/correlation", tags=["Correlation"])
 
+router=APIRouter(prefix="/correlation",tags=["Correlation"])
 
-# -------------------------
-# SINGLETONS
-# -------------------------
+analytics=AnalyticsEngine()
 
-analytics = AnalyticsEngine()
-
-# -------------------------
-# EVENT INGESTION
-# -------------------------
 
 @router.post("/event")
-def ingest_event(event: CorrelationEvent) -> Dict[str, str]:
+def ingest_event(event:CorrelationEvent)->Dict[str,str]:
 
     emit_event(event)
 
-    return {
-        "status": "accepted",
-        "event_id": event.event_id
+    return{
+        "status":"accepted",
+        "event_id":event.event_id
     }
 
 
-# -------------------------
-# RISK SCORING
-# -------------------------
+@router.get("/risk/{user_id}/{session_id}/{entity_type}/{entity_id}")
+def get_risk(
+    user_id:str,
+    session_id:str,
+    entity_type:EntityType,
+    entity_id:str,
+    window_minutes:int=120
+):
 
-@router.get("/risk/{entity_type}/{entity_id}")
-def get_risk(entity_type: EntityType, entity_id: str, window_minutes: int = 120):
-
-    context = correlator.build_context(
+    context=correlator.build_context(
+        user_id=user_id,
+        session_id=session_id,
         entity_type=entity_type,
         entity_id=entity_id,
         window_minutes=window_minutes
     )
 
-    result = risk_scorer.score(context)
+    result=risk_scorer.score(context)
 
-    return {
-        "entity_id": entity_id,
-        "entity_type": entity_type,
-        "risk_score": result.score,
-        "risk_level": result.level,
-        "attack_type": result.attack_type,
-        "mitre_attack": result.mitre,
-        "reasons": result.reasons
+    return{
+        "user_id":user_id,
+        "session_id":session_id,
+        "entity_id":entity_id,
+        "entity_type":entity_type,
+        "risk_score":result.score,
+        "risk_level":result.level,
+        "attack_type":result.attack_type,
+        "mitre_attack":result.mitre,
+        "reasons":result.reasons,
+        "breakdown":result.breakdown
     }
 
 
-# -------------------------
-# EXPLANATION ENGINE
-# -------------------------
+@router.get("/explain/{user_id}/{session_id}/{entity_type}/{entity_id}")
+def explain_detection(
+    user_id:str,
+    session_id:str,
+    entity_type:EntityType,
+    entity_id:str,
+    window_minutes:int=120
+):
 
-@router.get("/explain/{entity_type}/{entity_id}")
-def explain_detection(entity_type: EntityType, entity_id: str, window_minutes: int = 120):
-
-    context = correlator.build_context(
+    context=correlator.build_context(
+        user_id=user_id,
+        session_id=session_id,
         entity_type=entity_type,
         entity_id=entity_id,
         window_minutes=window_minutes
     )
 
-    explanation = generate_explanation(context)
+    explanation=generate_explanation(context)
 
-    return {
-        "entity_id": entity_id,
-        "entity_type": entity_type,
-        "explanation": explanation
+    return{
+        "user_id":user_id,
+        "session_id":session_id,
+        "entity_id":entity_id,
+        "entity_type":entity_type,
+        "explanation":explanation
     }
 
 
-# -------------------------
-# ATTACK GRAPH
-# -------------------------
+@router.get("/events/{user_id}/{session_id}")
+def get_session_events(
+    user_id:str,
+    session_id:str,
+    window_minutes:int=1440
+):
 
-@router.get("/graph/{entity_type}/{entity_id}")
-def get_attack_graph(entity_type: EntityType, entity_id: str, window_minutes: int = 120):
+    events=event_store.get_events(
 
-    context = correlator.build_context(
+        user_id=user_id,
+
+        session_id=session_id,
+
+        entity_type="session",
+
+        entity_id=session_id,
+
+        window_minutes=window_minutes
+
+    )
+
+    return{
+
+        "events":[
+
+            {
+
+                "module":(
+                    e.module.value
+                    if hasattr(e.module,"value")
+                    else e.module
+                ),
+
+                "signal":e.signal,
+
+                "severity":(
+                    e.severity.value
+                    if hasattr(e.severity,"value")
+                    else e.severity
+                ),
+
+                "timestamp":e.timestamp.isoformat(),
+
+                "entity_id":e.entity_id
+
+            }
+
+            for e in events
+
+        ]
+
+    }
+
+
+@router.get("/graph/{user_id}/{session_id}/{entity_type}/{entity_id}")
+def get_attack_graph(
+    user_id:str,
+    session_id:str,
+    entity_type:EntityType,
+    entity_id:str,
+    window_minutes:int=120
+):
+
+    context=correlator.build_context(
+        user_id=user_id,
+        session_id=session_id,
         entity_type=entity_type,
         entity_id=entity_id,
         window_minutes=window_minutes
     )
 
-    graph = build_graph(context)
+    graph=build_graph(context)
 
-    return {
-        "entity_id": entity_id,
-        "entity_type": entity_type,
-        "graph": graph
+    return{
+        "user_id":user_id,
+        "session_id":session_id,
+        "entity_id":entity_id,
+        "entity_type":entity_type,
+        "graph":graph
     }
 
-
-# -------------------------
-# THREAT MEMORY
-# -------------------------
 
 @router.get("/history/{entity_id}")
-def get_threat_history(entity_id: str):
+def get_threat_history(entity_id:str):
 
-    history = threat_memory.get_entity_activity(entity_id)
+    history=threat_memory.get_entity_activity(entity_id)
 
-    return {
-        "entity_id": entity_id,
-        "history": history
+    return{
+        "entity_id":entity_id,
+        "history":history
     }
 
-
-# -------------------------
-# ANALYTICS
-# -------------------------
 
 @router.get("/stats/modules")
 def module_stats():
-
     return analytics.get_module_stats()
 
 
 @router.get("/stats/signals")
 def signal_stats():
-
     return analytics.get_signal_stats()
 
 
 @router.get("/stats/severity")
 def severity_stats():
-
     return analytics.get_severity_stats()
 
 
 @router.get("/stats/top_entities")
 def top_entities():
-
     return analytics.get_top_entities()
 
-@router.get("/export/events")
-def export_events():
 
-    events = event_store.get_events(
-        entity_type=EntityType.session,
-        entity_id="*",
-        window_minutes=100000
-    )
+@router.get("/replay/{user_id}/{session_id}/{entity_type}/{entity_id}")
+def attack_replay(
+    user_id:str,
+    session_id:str,
+    entity_type:EntityType,
+    entity_id:str,
+    window_minutes:int=120
+):
 
-    return {
-        "total_events": len(events),
-        "events": [e.dict() for e in events]
-    }
-
-@router.get("/replay/{entity_type}/{entity_id}")
-def attack_replay(entity_type: EntityType, entity_id: str, window_minutes: int = 120):
-
-    events = event_store.get_events(
+    events=event_store.get_events(
+        user_id=user_id,
+        session_id=session_id,
         entity_type=entity_type,
         entity_id=entity_id,
         window_minutes=window_minutes
     )
 
-    timeline = build_attack_replay(events)
+    timeline=build_attack_replay(events)
 
-    return {
-        "entity_id": entity_id,
-        "entity_type": entity_type,
-        "timeline": timeline
+    return{
+        "user_id":user_id,
+        "session_id":session_id,
+        "entity_id":entity_id,
+        "entity_type":entity_type,
+        "timeline":timeline
     }
 
+
 @router.get("/live")
-def live_threat_feed(limit: int = 20):
+def live_threat_feed(limit:int=20):
 
-    events = get_latest_events(limit)
+    events=get_latest_events(limit)
 
-    return {
-        "events": events
-    }   
+    return{
+        "events":events
+    }

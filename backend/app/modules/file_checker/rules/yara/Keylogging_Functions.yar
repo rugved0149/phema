@@ -1,15 +1,15 @@
 rule Keylogging_Functions
 {
-    meta:
-        description = "Keyboard input capture indicators"
-        severity = "high"
-        category = "surveillance"
+meta:
+description = "Keyboard capture APIs"
+severity = "high"
+category = "surveillance"
 
-    strings:
-        $s1 = "GetAsyncKeyState"
-        $s2 = "SetWindowsHookEx"
-        $s3 = "WH_KEYBOARD_LL"
+strings:
+$s1 = "GetAsyncKeyState"
+$s2 = "SetWindowsHookEx"
+$s3 = "WH_KEYBOARD_LL"
 
-    condition:
-        any of them
+condition:
+uint16(0) == 0x5A4D and 2 of them
 }

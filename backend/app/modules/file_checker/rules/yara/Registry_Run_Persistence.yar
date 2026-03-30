@@ -1,14 +1,14 @@
 rule Registry_Run_Persistence
 {
-    meta:
-        description = "Registry-based persistence mechanism"
-        severity = "medium"
-        category = "persistence"
+meta:
+description = "Registry persistence indicators"
+severity = "medium"
+category = "persistence"
 
-    strings:
-        $reg1 = "CurrentVersion\\Run"
-        $reg2 = "CurrentVersion\\RunOnce"
+strings:
+$reg1 = "CurrentVersion\\Run"
+$reg2 = "CurrentVersion\\RunOnce"
 
-    condition:
-        any of them
+condition:
+uint16(0) == 0x5A4D and any of them
 }

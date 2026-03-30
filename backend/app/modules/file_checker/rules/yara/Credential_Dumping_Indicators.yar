@@ -1,15 +1,15 @@
 rule Credential_Dumping_Indicators
 {
-    meta:
-        description = "Indicators of credential dumping"
-        severity = "high"
-        category = "credential-access"
+meta:
+description = "Credential dumping artifacts"
+severity = "high"
+category = "credential-access"
 
-    strings:
-        $s1 = "LSASS"
-        $s2 = "sekurlsa"
-        $s3 = "logonpasswords"
+strings:
+$s1 = "LSASS"
+$s2 = "sekurlsa"
+$s3 = "logonpasswords"
 
-    condition:
-        any of them
+condition:
+uint16(0) == 0x5A4D and 2 of them
 }

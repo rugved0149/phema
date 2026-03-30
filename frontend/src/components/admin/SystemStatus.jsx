@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getSystemStatus } from "../api/system";
+import { getSystemStatus } from "../../api/system";
 
 export default function SystemStatus() {
   const { data, isLoading, error } = useQuery({

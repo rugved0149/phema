@@ -1,14 +1,14 @@
 rule CMD_Execution_Abuse
 {
-    meta:
-        description = "Windows command shell execution"
-        severity = "medium"
-        category = "execution"
+meta:
+description = "Command shell execution pattern"
+severity = "medium"
+category = "execution"
 
-    strings:
-        $cmd1 = "cmd.exe /c"
-        $cmd2 = "cmd /c"
+strings:
+$cmd1 = "cmd.exe /c"
+$cmd2 = "cmd /c"
 
-    condition:
-        any of them
+condition:
+uint16(0) == 0x5A4D and all of them
 }

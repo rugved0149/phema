@@ -1,8 +1,8 @@
 import { api } from "./client";
 
-export const getTimeline = async (entityType, entityId) => {
+export const getTimeline = async (userId, sessionId, entityType, entityId) => {
   const res = await api.get(
-    `/correlation/replay/${entityType}/${entityId}`
+    `/correlation/replay/${userId}/${sessionId}/${entityType}/${entityId}`
   );
   return res.data;
 };

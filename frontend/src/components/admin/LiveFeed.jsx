@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getLiveEvents } from "../api/correlation";
+import { getLiveEvents } from "../../api/correlation";
 
 export default function LiveFeed() {
   const { data, isLoading, error } = useQuery({

@@ -1,15 +1,15 @@
 rule Script_Obfuscation_Patterns
 {
-    meta:
-        description = "Obfuscated script constructs"
-        severity = "high"
-        category = "obfuscation"
+meta:
+description = "Script obfuscation indicators"
+severity = "medium"
+category = "obfuscation"
 
-    strings:
-        $s1 = "eval("
-        $s2 = "fromCharCode"
-        $s3 = "WScript.Shell"
+strings:
+$s1 = "eval("
+$s2 = "fromCharCode"
+$s3 = "WScript.Shell"
 
-    condition:
-        any of them
+condition:
+uint16(0) == 0x5A4D and 2 of them
 }

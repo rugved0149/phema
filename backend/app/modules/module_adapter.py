@@ -1,12 +1,12 @@
-# app/modules/module_adapter.py
-
 from app.correlation.schemas import CorrelationEvent
 from app.core.event_emitter import emit_event
 from app.core.signal_builder import build_signal
-
+from app.core.logger import logger
 
 def send_event(
     *,
+    user_id: str,
+    session_id: str,
     entity_id: str,
     entity_type: str,
     module: str,
@@ -15,10 +15,6 @@ def send_event(
     severity: str,
     metadata=None
 ):
-    """
-    Standardized event emission reference point.
-    Handles both dict and object returns safely.
-    """
 
     if not signal:
         return
@@ -29,30 +25,25 @@ def send_event(
     try:
 
         payload = build_signal(
-            entity_id,
-            entity_type,
-            module,
-            signal,
-            confidence,
-            severity,
-            metadata
+            user_id=user_id,
+            session_id=session_id,
+            entity_id=entity_id,
+            entity_type=entity_type,
+            module=module,
+            signal=signal,
+            confidence=confidence,
+            severity=severity,
+            metadata=metadata
         )
 
-        # 🔥 FIX: handle both dict and object safely
-
         if isinstance(payload, CorrelationEvent):
-
             event = payload
-
         else:
-
             event = CorrelationEvent(**payload)
 
         emit_event(event)
 
     except Exception as e:
-
-        from app.core.logger import logger
 
         logger.error(
             f"[MODULE ADAPTER ERROR] {e}"
