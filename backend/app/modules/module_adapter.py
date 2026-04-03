@@ -17,6 +17,7 @@ def send_event(
 ):
 
     if not signal:
+        print("SEND_EVENT BLOCKED: empty signal")
         return
 
     if metadata is None:
@@ -44,6 +45,10 @@ def send_event(
         emit_event(event)
 
     except Exception as e:
+
+        logger.error(
+            f"[MODULE ADAPTER ERROR] {e}"
+        )
 
         logger.error(
             f"[MODULE ADAPTER ERROR] {e}"

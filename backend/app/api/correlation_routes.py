@@ -1,8 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter,Depends,HTTPException
 from typing import Dict
 
 from app.core.event_emitter import emit_event
-from app.correlation.schemas import CorrelationEvent, EntityType
+from app.correlation.schemas import CorrelationEvent,EntityType
 from app.correlation.explanation_engine import generate_explanation
 from app.correlation.graph_engine import build_graph
 from app.correlation.threat_memory import threat_memory
@@ -10,7 +10,8 @@ from app.correlation.analytics_engine import AnalyticsEngine
 from app.correlation.attack_replay import build_attack_replay
 from app.correlation.live_feed import get_latest_events
 
-from app.core.dependencies import event_store, correlator, risk_scorer
+from app.core.dependencies import event_store,correlator,risk_scorer
+from app.core.auth_middleware import get_current_user
 
 router=APIRouter(prefix="/correlation",tags=["Correlation"])
 
@@ -18,7 +19,17 @@ analytics=AnalyticsEngine()
 
 
 @router.post("/event")
-def ingest_event(event:CorrelationEvent)->Dict[str,str]:
+def ingest_event(
+    event:CorrelationEvent,
+    user=Depends(get_current_user)
+)->Dict[str,str]:
+
+    if event.user_id!=user.get("sub"):
+
+        raise HTTPException(
+            status_code=403,
+            detail="User mismatch"
+        )
 
     emit_event(event)
 
@@ -34,11 +45,21 @@ def get_risk(
     session_id:str,
     entity_type:EntityType,
     entity_id:str,
-    window_minutes:int=120
+    window_minutes:int=120,
+    user=Depends(get_current_user)
 ):
 
+    jwt_user_id=user.get("sub")
+
+    if user_id!=jwt_user_id:
+
+        raise HTTPException(
+            status_code=403,
+            detail="Unauthorized access"
+        )
+
     context=correlator.build_context(
-        user_id=user_id,
+        user_id=jwt_user_id,
         session_id=session_id,
         entity_type=entity_type,
         entity_id=entity_id,
@@ -48,7 +69,7 @@ def get_risk(
     result=risk_scorer.score(context)
 
     return{
-        "user_id":user_id,
+        "user_id":jwt_user_id,
         "session_id":session_id,
         "entity_id":entity_id,
         "entity_type":entity_type,
@@ -67,11 +88,21 @@ def explain_detection(
     session_id:str,
     entity_type:EntityType,
     entity_id:str,
-    window_minutes:int=120
+    window_minutes:int=120,
+    user=Depends(get_current_user)
 ):
 
+    jwt_user_id=user.get("sub")
+
+    if user_id!=jwt_user_id:
+
+        raise HTTPException(
+            status_code=403,
+            detail="Unauthorized access"
+        )
+
     context=correlator.build_context(
-        user_id=user_id,
+        user_id=jwt_user_id,
         session_id=session_id,
         entity_type=entity_type,
         entity_id=entity_id,
@@ -81,7 +112,7 @@ def explain_detection(
     explanation=generate_explanation(context)
 
     return{
-        "user_id":user_id,
+        "user_id":jwt_user_id,
         "session_id":session_id,
         "entity_id":entity_id,
         "entity_type":entity_type,
@@ -93,12 +124,22 @@ def explain_detection(
 def get_session_events(
     user_id:str,
     session_id:str,
-    window_minutes:int=1440
+    window_minutes:int=1440,
+    user=Depends(get_current_user)
 ):
+
+    jwt_user_id=user.get("sub")
+
+    if user_id!=jwt_user_id:
+
+        raise HTTPException(
+            status_code=403,
+            detail="Unauthorized access"
+        )
 
     events=event_store.get_events(
 
-        user_id=user_id,
+        user_id=jwt_user_id,
 
         session_id=session_id,
 
@@ -149,11 +190,21 @@ def get_attack_graph(
     session_id:str,
     entity_type:EntityType,
     entity_id:str,
-    window_minutes:int=120
+    window_minutes:int=120,
+    user=Depends(get_current_user)
 ):
 
+    jwt_user_id=user.get("sub")
+
+    if user_id!=jwt_user_id:
+
+        raise HTTPException(
+            status_code=403,
+            detail="Unauthorized access"
+        )
+
     context=correlator.build_context(
-        user_id=user_id,
+        user_id=jwt_user_id,
         session_id=session_id,
         entity_type=entity_type,
         entity_id=entity_id,
@@ -163,7 +214,7 @@ def get_attack_graph(
     graph=build_graph(context)
 
     return{
-        "user_id":user_id,
+        "user_id":jwt_user_id,
         "session_id":session_id,
         "entity_id":entity_id,
         "entity_type":entity_type,
@@ -208,11 +259,21 @@ def attack_replay(
     session_id:str,
     entity_type:EntityType,
     entity_id:str,
-    window_minutes:int=120
+    window_minutes:int=120,
+    user=Depends(get_current_user)
 ):
 
+    jwt_user_id=user.get("sub")
+
+    if user_id!=jwt_user_id:
+
+        raise HTTPException(
+            status_code=403,
+            detail="Unauthorized access"
+        )
+
     events=event_store.get_events(
-        user_id=user_id,
+        user_id=jwt_user_id,
         session_id=session_id,
         entity_type=entity_type,
         entity_id=entity_id,
@@ -222,7 +283,7 @@ def attack_replay(
     timeline=build_attack_replay(events)
 
     return{
-        "user_id":user_id,
+        "user_id":jwt_user_id,
         "session_id":session_id,
         "entity_id":entity_id,
         "entity_type":entity_type,
@@ -231,7 +292,10 @@ def attack_replay(
 
 
 @router.get("/live")
-def live_threat_feed(limit:int=20):
+def live_threat_feed(
+    limit:int=20,
+    user=Depends(get_current_user)
+):
 
     events=get_latest_events(limit)
 

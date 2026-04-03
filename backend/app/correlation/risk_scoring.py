@@ -17,8 +17,8 @@ MAX_REPEAT_SCORE = 15
 MAX_MEMORY_SCORE = 15
 
 # DECAY SETTINGS
-DECAY_LAMBDA = 0.002
-MIN_DECAY_WEIGHT = 0.2
+DECAY_LAMBDA = 0.0008
+MIN_DECAY_WEIGHT = 0.25
 
 
 class RiskResult:
@@ -106,11 +106,11 @@ class RiskScorer:
         # MODULE SCORE
         module_count = len(context.modules_involved)
 
-        if module_count > 1:
+        if module_count >= 1:
 
             module_score = min(
                 MAX_MODULE_SCORE,
-                5 * module_count
+                4 * module_count
             )
 
             reasons.append(
@@ -150,7 +150,7 @@ class RiskScorer:
 
             repeat_score = min(
                 MAX_REPEAT_SCORE,
-                int(weighted_repeat * 5)
+                int(weighted_repeat * 3)
             )
 
             reasons.append(
@@ -158,27 +158,35 @@ class RiskScorer:
             )
 
         # DECAYED SEVERITY SCORING
-        weighted_high = 0.0
+        weighted_score = 0.0
 
         for event in context.events:
 
+            weight = self.decay_weight(
+                event.timestamp
+            )
+
             if event.severity.value == "high":
 
-                weight = self.decay_weight(
-                    event.timestamp
+                weighted_score += (
+                    9 * weight
                 )
 
-                weighted_high += weight
+            elif event.severity.value == "medium":
 
-        if weighted_high > 0:
+                weighted_score += (
+                    4 * weight
+                )
+
+        if weighted_score > 0:
 
             severity_score = min(
                 MAX_SEVERITY_SCORE,
-                int(weighted_high * 8)
+                int(weighted_score)
             )
 
             reasons.append(
-                f"{context.high_severity_events} high severity events"
+                f"{context.total_events} severity-weighted events detected"
             )
 
         # HONEYPOT (Stricter condition)
@@ -255,7 +263,7 @@ class RiskScorer:
 
             memory_score = min(
                 MAX_MEMORY_SCORE,
-                activity // 2
+                int(math.log(activity+1) * 3)
             )
 
             reasons.append(

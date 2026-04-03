@@ -1,57 +1,79 @@
 import { api } from "../../api/client";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-export default function UserIdentityPanel({ onSessionReady }) {
+export default function UserIdentityPanel({
 
-  const [userId, setUserId] = useState("");
-  const [sessionId, setSessionId] = useState("");
+  fixedUserId,
+  onSessionReady
 
-  const createUser = () => {
+}){
 
-    const newUser = `user_${uuidv4().slice(0,6)}`;
+  const [userId,setUserId]=useState("");
 
-    setUserId(newUser);
+  const [sessionId,setSessionId]=useState("");
 
-    setSessionId("");
+  useEffect(()=>{
 
-  };
+    if(fixedUserId){
 
-  const createSession = async () => {
+      setUserId(fixedUserId);
 
-    if (!userId) {
-      alert("Create user first");
-      return;
     }
 
-    try {
+  },[fixedUserId]);
 
-      const newSession =
+
+  const createSession=async()=>{
+
+    if(!userId){
+
+      alert("User not available");
+
+      return;
+
+    }
+
+    try{
+
+      const newSession=
         `session_${uuidv4().slice(0,8)}`;
 
       setSessionId(newSession);
 
       await api.post(
+
         `/user/${userId}/session`,
+
         null,
+
         {
-          params: {
-            session_id: newSession
+
+          params:{
+
+            session_id:newSession
+
           }
+
         }
+
       );
 
-      if (onSessionReady) {
+      if(onSessionReady){
 
         onSessionReady({
-          userId: userId,
-          sessionId: newSession
+
+          userId:userId,
+
+          sessionId:newSession
+
         });
 
       }
 
     }
-    catch (err) {
+
+    catch(err){
 
       console.error(err);
 
@@ -61,22 +83,19 @@ export default function UserIdentityPanel({ onSessionReady }) {
 
   };
 
-  return (
+
+  return(
 
     <div className="bg-gray-900 p-4 rounded-xl shadow-md mb-4">
 
       <h2 className="text-xl text-white mb-3">
+
         Identity Setup
+
       </h2>
 
-      <div className="flex gap-2 mb-3">
 
-        <button
-          onClick={createUser}
-          className="bg-blue-600 px-4 py-2 rounded"
-        >
-          Create User
-        </button>
+      <div className="flex gap-2 mb-3">
 
         {userId && (
 
@@ -85,7 +104,9 @@ export default function UserIdentityPanel({ onSessionReady }) {
             User:
 
             <span className="ml-2 font-mono">
+
               {userId}
+
             </span>
 
           </span>
@@ -94,14 +115,21 @@ export default function UserIdentityPanel({ onSessionReady }) {
 
       </div>
 
+
       <div className="flex gap-2">
 
         <button
+
           onClick={createSession}
+
           className="bg-green-600 px-4 py-2 rounded"
+
         >
+
           Create Session
+
         </button>
+
 
         {sessionId && (
 
@@ -110,7 +138,9 @@ export default function UserIdentityPanel({ onSessionReady }) {
             Session:
 
             <span className="ml-2 font-mono">
+
               {sessionId}
+
             </span>
 
           </span>

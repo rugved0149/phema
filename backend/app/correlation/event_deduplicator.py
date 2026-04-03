@@ -45,6 +45,7 @@ class EventDeduplicator:
             f"{event.entity_id}:"
             f"{event.module}:"
             f"{event.signal}:"
+            f"{event.metadata.get('hash', 'nohash')}:"
             f"{time_bucket}"
         )
 

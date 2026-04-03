@@ -1,14 +1,21 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from typing import List
 
 from app.core.dependencies import event_store, correlator, risk_scorer
 from app.correlation.sqlite_event_store import SQLiteEventStore
 from app.correlation.schemas import EntityType
 from app.correlation.analytics_engine import AnalyticsEngine
-from app.db.base import SessionLocal
-from app.db.session import EventRecord
 
-router = APIRouter(prefix="/admin", tags=["Admin"])
+from app.db.base import SessionLocal
+from app.db.session import EventRecord, AlertRecord
+
+from app.core.auth_middleware import get_admin_user
+
+router = APIRouter(
+    prefix="/admin",
+    tags=["Admin"],
+    dependencies=[Depends(get_admin_user)]
+)
 
 analytics = AnalyticsEngine()
 store = SQLiteEventStore()
@@ -42,6 +49,39 @@ def get_event_timeline(
         }
         for e in events
     ]
+
+
+@router.get("/alerts")
+def get_system_alerts():
+
+    with SessionLocal() as db:
+
+        alerts = (
+            db.query(AlertRecord)
+            .order_by(
+                AlertRecord.timestamp.desc()
+            )
+            .limit(100)
+            .all()
+        )
+
+        results = []
+
+        for a in alerts:
+
+            results.append({
+
+                "alert_type": a.alert_type,
+                "message": a.message,
+                "timestamp": a.timestamp,
+                "session_id": a.session_id,
+                "user_id": a.user_id
+
+            })
+
+        return {
+            "alerts": results
+        }
 
 
 @router.get("/risk/{user_id}/{session_id}/{entity_type}/{entity_id}")
@@ -88,17 +128,13 @@ def get_analytics():
 @router.get("/event-count")
 def get_event_count():
 
-    db = SessionLocal()
+    with SessionLocal() as db:
 
-    try:
         total = db.query(EventRecord).count()
 
         return {
             "total_events": total
         }
-
-    finally:
-        db.close()
 
 
 @router.post("/purge")

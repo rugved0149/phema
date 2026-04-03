@@ -12,8 +12,12 @@ def emit_event(event):
 
         # Deduplication
         if event_deduplicator.is_duplicate(event):
-            return
-
+           return
+        print(
+            "EMIT:",
+            event.module.value,
+            event.signal
+        )
         # Log only meaningful events
         if event.severity.value in ("medium", "high"):
 

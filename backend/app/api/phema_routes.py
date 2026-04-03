@@ -1,14 +1,21 @@
 # app/api/phema_routes.py
 
-from fastapi import APIRouter
-from fastapi import UploadFile, File
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional, Dict
+
 from app.orchestrator.phema_engine import PHEMAEngine
 from app.correlation.schemas import EntityType
+
 from app.utils.file_handler import save_upload_file
+
+from app.core.auth_middleware import get_current_user
+
+
 router = APIRouter(prefix="/phema", tags=["PHEMA"])
+
 engine = PHEMAEngine()
+
 
 class ScanRequest(BaseModel):
 
@@ -35,16 +42,26 @@ class ScanRequest(BaseModel):
     )
 
     url: Optional[str] = None
+
     text: Optional[str] = None
+
     file_path: Optional[str] = None
+
     session_context: Optional[Dict] = None
 
 
 @router.post("/scan")
-def unified_scan(payload: ScanRequest):
+
+def unified_scan(
+    payload: ScanRequest,
+    user=Depends(get_current_user)
+):
+
+    # Prevent user spoofing
+    user_id=user.get("sub")
 
     engine.run(
-        user_id=payload.user_id,
+        user_id=user_id,
         session_id=payload.session_id,
         entity_id=payload.entity_id,
         entity_type=payload.entity_type.value,
@@ -56,16 +73,18 @@ def unified_scan(payload: ScanRequest):
 
     return {
         "status": "scan_executed",
-        "user_id": payload.user_id,
+        "user_id": user_id,
         "session_id": payload.session_id,
         "entity_id": payload.entity_id,
         "entity_type": payload.entity_type
     }
 
+
 @router.post("/upload")
 
 async def upload_file(
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    user=Depends(get_current_user)
 ):
 
     saved_path = await save_upload_file(file)

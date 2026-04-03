@@ -22,6 +22,7 @@ from app.api.campaign_routes import router as campaign_router
 from app.api.event_routes import router as event_router
 from app.api.admin_user_routes import router as admin_user_router
 from app.api.report_routes import router as report_router
+from app.api.auth_routes import router as auth_router
 # DB
 from app.db.base import Base, engine
 
@@ -136,6 +137,7 @@ app.include_router(campaign_router)
 app.include_router(event_router)
 app.include_router(admin_user_router)
 app.include_router(report_router)
+app.include_router(auth_router)
 # HEALTH CHECK
 
 @app.get("/health")
