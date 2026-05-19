@@ -7,30 +7,68 @@ export default function Register(){
   const [username,setUsername]=useState("");
   const [password,setPassword]=useState("");
 
+  const [error,setError]=useState("");
+
   const handleRegister=async()=>{
 
-    await registerUser(
-      email,
-      username,
-      password
-    );
+    try{
 
-    localStorage.setItem(
-      "reg_email",
-      email
-    );
+      const res=await registerUser(
+        email,
+        username,
+        password
+      );
 
-    localStorage.setItem(
-      "reg_username",
-      username
-    );
+      const data=res.data;
 
-    localStorage.setItem(
-      "reg_password",
-      password
-    );
+      if(data.status==="weak_password"){
 
-    window.location="/verify";
+        setError(
+          data.message ||
+          "Weak password"
+        );
+
+        return;
+      }
+
+      if(data.status==="user_exists"){
+
+        setError(
+          "User already exists"
+        );
+
+        return;
+      }
+
+      if(data.status==="otp_sent"){
+
+        localStorage.setItem(
+          "reg_email",
+          email
+        );
+
+        localStorage.setItem(
+          "reg_username",
+          username
+        );
+
+        localStorage.setItem(
+          "reg_password",
+          password
+        );
+
+        window.location="/verify";
+
+      }
+
+    }
+    catch(e){
+
+      setError(
+        "Registration failed"
+      );
+
+    }
 
   };
 
@@ -61,6 +99,21 @@ export default function Register(){
           setPassword(e.target.value)
         }
       />
+
+      {/* ERROR DISPLAY */}
+
+      {error && (
+
+        <div
+          style={{
+            color:"red",
+            marginTop:"8px"
+          }}
+        >
+          {error}
+        </div>
+
+      )}
 
       <button
         onClick={handleRegister}

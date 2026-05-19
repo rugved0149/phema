@@ -3,6 +3,8 @@
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional, Dict
+from app.core.rate_limiter import limiter
+from fastapi import Request
 
 from app.orchestrator.phema_engine import PHEMAEngine
 from app.correlation.schemas import EntityType
@@ -51,8 +53,9 @@ class ScanRequest(BaseModel):
 
 
 @router.post("/scan")
-
+@limiter.limit("25/minute")
 def unified_scan(
+    request: Request,
     payload: ScanRequest,
     user=Depends(get_current_user)
 ):
@@ -81,8 +84,9 @@ def unified_scan(
 
 
 @router.post("/upload")
-
+@limiter.limit("15/minute")
 async def upload_file(
+    request: Request,
     file: UploadFile = File(...),
     user=Depends(get_current_user)
 ):

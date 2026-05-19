@@ -10,7 +10,6 @@ export default function UserIdentityPanel({
 }){
 
   const [userId,setUserId]=useState("");
-
   const [sessionId,setSessionId]=useState("");
 
   useEffect(()=>{
@@ -18,6 +17,29 @@ export default function UserIdentityPanel({
     if(fixedUserId){
 
       setUserId(fixedUserId);
+
+      return;
+
+    }
+
+    const token=localStorage.getItem("token");
+
+    if(token){
+
+      try{
+
+        const payload=JSON.parse(
+          atob(token.split(".")[1])
+        );
+
+        setUserId(payload.sub);
+
+      }
+      catch(e){
+
+        console.error("Invalid token");
+
+      }
 
     }
 
@@ -29,7 +51,6 @@ export default function UserIdentityPanel({
     if(!userId){
 
       alert("User not available");
-
       return;
 
     }
@@ -50,9 +71,7 @@ export default function UserIdentityPanel({
         {
 
           params:{
-
             session_id:newSession
-
           }
 
         }
@@ -64,7 +83,6 @@ export default function UserIdentityPanel({
         onSessionReady({
 
           userId:userId,
-
           sessionId:newSession
 
         });

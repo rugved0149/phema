@@ -13,18 +13,23 @@ from app.correlation.live_feed import get_latest_events
 from app.core.dependencies import event_store,correlator,risk_scorer
 from app.core.auth_middleware import get_current_user
 
+from app.core.rate_limiter import limiter
+from fastapi import Request
+
 router=APIRouter(prefix="/correlation",tags=["Correlation"])
 
 analytics=AnalyticsEngine()
 
 
 @router.post("/event")
+@limiter.limit("55/minute")
 def ingest_event(
     event:CorrelationEvent,
+    request: Request,
     user=Depends(get_current_user)
 )->Dict[str,str]:
 
-    if event.user_id!=user.get("sub"):
+    if (event.user_id!=user.get("sub") and user.get("role")!="admin"):
 
         raise HTTPException(
             status_code=403,
@@ -51,7 +56,7 @@ def get_risk(
 
     jwt_user_id=user.get("sub")
 
-    if user_id!=jwt_user_id:
+    if (user_id!=jwt_user_id and user.get("role")!="admin"):
 
         raise HTTPException(
             status_code=403,
@@ -59,7 +64,7 @@ def get_risk(
         )
 
     context=correlator.build_context(
-        user_id=jwt_user_id,
+        user_id=user_id,
         session_id=session_id,
         entity_type=entity_type,
         entity_id=entity_id,
@@ -69,7 +74,7 @@ def get_risk(
     result=risk_scorer.score(context)
 
     return{
-        "user_id":jwt_user_id,
+        "user_id":user_id,
         "session_id":session_id,
         "entity_id":entity_id,
         "entity_type":entity_type,
@@ -94,7 +99,7 @@ def explain_detection(
 
     jwt_user_id=user.get("sub")
 
-    if user_id!=jwt_user_id:
+    if (user_id!=jwt_user_id and user.get("role")!="admin"):
 
         raise HTTPException(
             status_code=403,
@@ -102,7 +107,7 @@ def explain_detection(
         )
 
     context=correlator.build_context(
-        user_id=jwt_user_id,
+        user_id=user_id,
         session_id=session_id,
         entity_type=entity_type,
         entity_id=entity_id,
@@ -112,7 +117,7 @@ def explain_detection(
     explanation=generate_explanation(context)
 
     return{
-        "user_id":jwt_user_id,
+        "user_id":user_id,
         "session_id":session_id,
         "entity_id":entity_id,
         "entity_type":entity_type,
@@ -130,7 +135,7 @@ def get_session_events(
 
     jwt_user_id=user.get("sub")
 
-    if user_id!=jwt_user_id:
+    if (user_id!=jwt_user_id and user.get("role")!="admin"):
 
         raise HTTPException(
             status_code=403,
@@ -139,7 +144,7 @@ def get_session_events(
 
     events=event_store.get_events(
 
-        user_id=jwt_user_id,
+        user_id=user_id,
 
         session_id=session_id,
 
@@ -196,7 +201,7 @@ def get_attack_graph(
 
     jwt_user_id=user.get("sub")
 
-    if user_id!=jwt_user_id:
+    if (user_id!=jwt_user_id and user.get("role")!="admin"):
 
         raise HTTPException(
             status_code=403,
@@ -204,7 +209,7 @@ def get_attack_graph(
         )
 
     context=correlator.build_context(
-        user_id=jwt_user_id,
+        user_id=user_id,
         session_id=session_id,
         entity_type=entity_type,
         entity_id=entity_id,
@@ -214,7 +219,7 @@ def get_attack_graph(
     graph=build_graph(context)
 
     return{
-        "user_id":jwt_user_id,
+        "user_id":user_id,
         "session_id":session_id,
         "entity_id":entity_id,
         "entity_type":entity_type,
@@ -265,7 +270,7 @@ def attack_replay(
 
     jwt_user_id=user.get("sub")
 
-    if user_id!=jwt_user_id:
+    if (user_id!=jwt_user_id and user.get("role")!="admin"):
 
         raise HTTPException(
             status_code=403,
@@ -273,7 +278,7 @@ def attack_replay(
         )
 
     events=event_store.get_events(
-        user_id=jwt_user_id,
+        user_id=user_id,
         session_id=session_id,
         entity_type=entity_type,
         entity_id=entity_id,
@@ -283,7 +288,7 @@ def attack_replay(
     timeline=build_attack_replay(events)
 
     return{
-        "user_id":jwt_user_id,
+        "user_id":user_id,
         "session_id":session_id,
         "entity_id":entity_id,
         "entity_type":entity_type,

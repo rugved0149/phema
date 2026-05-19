@@ -14,7 +14,7 @@ export default function AdminSessionList({
     queryFn:async()=>{
 
       const res=await api.get(
-        `/user/${userId}/sessions`
+        `/admin/user/${userId}/sessions`
       );
 
       return res.data.sessions;
@@ -66,23 +66,63 @@ export default function AdminSessionList({
 
             <div
               key={s.session_id}
-              className="bg-gray-100 p-3 rounded cursor-pointer hover:bg-gray-200 flex justify-between items-center"
+              className="bg-gray-100 p-3 rounded cursor-pointer hover:bg-gray-200"
               onClick={()=>onSelectSession(
                 s.session_id
               )}
             >
 
-              <span className="text-gray-700 font-mono">
-                {s.session_id}
-              </span>
+              <div className="flex justify-between items-center">
 
-              <div className="flex items-center gap-3">
-
-                <span className="text-gray-600 text-sm w-[48px] text-right font-mono">
-                  {s.risk_score}
+                <span className="text-gray-700 font-mono">
+                  {s.session_id}
                 </span>
 
-                <RiskBadge level={s.risk_level}/>
+                <div className="flex items-center gap-3">
+
+                  <span className="text-gray-600 text-sm w-[48px] text-right font-mono">
+                    {s.last_risk_score ?? 0}
+                  </span>
+
+                  <RiskBadge level={s.peak_risk_level ?? "LOW"}/>
+
+                </div>
+
+              </div>
+
+              <div className="mt-2 text-xs text-gray-600 flex flex-wrap gap-4">
+
+                <span>
+                  Peak:
+                  <span className="ml-1 font-mono text-yellow-600">
+                    {s.peak_risk_score ?? 0}
+                  </span>
+                </span>
+
+                <span>
+                  Level:
+                  <span className="ml-1 font-semibold text-red-600">
+                    {s.peak_risk_level ?? "LOW"}
+                  </span>
+                </span>
+
+                <span>
+                  Time:
+                  <span className="ml-1 font-mono">
+                    {s.peak_risk_timestamp
+                      ? new Date(
+                          s.peak_risk_timestamp
+                        ).toLocaleString()
+                      : "N/A"}
+                  </span>
+                </span>
+
+                <span>
+                  Trend:
+                  <span className="ml-1 font-semibold text-blue-600">
+                    {s.risk_trend ?? "STABLE"}
+                  </span>
+                </span>
 
               </div>
 

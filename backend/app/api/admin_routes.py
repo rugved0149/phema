@@ -2,14 +2,15 @@ from fastapi import APIRouter, Query, Depends
 from typing import List
 
 from app.core.dependencies import event_store, correlator, risk_scorer
+from app.core.auth_middleware import get_admin_user
+from app.core.audit_logger import log_admin_action
+
 from app.correlation.sqlite_event_store import SQLiteEventStore
 from app.correlation.schemas import EntityType
 from app.correlation.analytics_engine import AnalyticsEngine
 
 from app.db.base import SessionLocal
-from app.db.session import EventRecord, AlertRecord
-
-from app.core.auth_middleware import get_admin_user
+from app.db.session import EventRecord, AlertRecord, SessionRecord
 
 router = APIRouter(
     prefix="/admin",
@@ -50,9 +51,14 @@ def get_event_timeline(
         for e in events
     ]
 
-
 @router.get("/alerts")
-def get_system_alerts():
+def get_system_alerts(admin=Depends(get_admin_user)):
+
+    log_admin_action(
+        user_id=admin.get("sub"),
+        action="view_alerts",
+        endpoint="/admin/alerts"
+    )
 
     with SessionLocal() as db:
 
@@ -65,7 +71,7 @@ def get_system_alerts():
             .all()
         )
 
-        results = []
+        results=[]
 
         for a in alerts:
 
@@ -79,10 +85,9 @@ def get_system_alerts():
 
             })
 
-        return {
-            "alerts": results
+        return{
+            "alerts":results
         }
-
 
 @router.get("/risk/{user_id}/{session_id}/{entity_type}/{entity_id}")
 def get_correlation_context(
@@ -114,8 +119,56 @@ def get_correlation_context(
     }
 
 
+# NEW — ADMIN USER SESSION VIEW
+
+@router.get("/user/{user_id}/sessions")
+def admin_get_user_sessions(user_id: str):
+
+    with SessionLocal() as db:
+
+        sessions = (
+            db.query(SessionRecord)
+            .filter(
+                SessionRecord.user_id == user_id
+            )
+            .order_by(
+                SessionRecord.created_at.desc()
+            )
+            .all()
+        )
+
+        results = []
+
+        for s in sessions:
+
+            results.append({
+
+                "session_id": s.session_id,
+                "created_at": s.created_at,
+                "status": s.status,
+
+                "peak_risk_score": s.peak_risk_score,
+                "peak_risk_level": s.peak_risk_level,
+                "peak_risk_timestamp": s.peak_risk_timestamp,
+
+                "last_risk_score": s.last_risk_score,
+                "risk_trend": s.risk_trend
+
+            })
+
+        return {
+            "sessions": results
+        }
+
+
 @router.get("/analytics")
-def get_analytics():
+def get_analytics(admin=Depends(get_admin_user)):
+
+    log_admin_action(
+        user_id=admin.get("sub"),
+        action="view_analytics",
+        endpoint="/admin/analytics"
+    )
 
     return {
         "modules": analytics.get_module_stats(),
@@ -123,7 +176,6 @@ def get_analytics():
         "severity": analytics.get_severity_stats(),
         "top_entities": analytics.get_top_entities()
     }
-
 
 @router.get("/event-count")
 def get_event_count():
@@ -138,7 +190,13 @@ def get_event_count():
 
 
 @router.post("/purge")
-def purge_old_events():
+def purge_old_events(admin=Depends(get_admin_user)):
+
+    log_admin_action(
+        user_id=admin.get("sub"),
+        action="purge_events",
+        endpoint="/admin/purge"
+    )
 
     store.purge_old_events()
 

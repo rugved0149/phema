@@ -1,6 +1,7 @@
-from fastapi import Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer
-
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, OAuth2PasswordBearer, HTTPAuthorizationCredentials
+from app.core.security import verify_token
+from app.core.token_blacklist import is_token_revoked
 from jose import jwt, JWTError
 
 SECRET_KEY="phema_secret_key"
@@ -10,28 +11,32 @@ oauth2_scheme=OAuth2PasswordBearer(
     tokenUrl="/auth/login"
 )
 
+security=HTTPBearer()
 
 def get_current_user(
-    token:str=Depends(oauth2_scheme)
+    credentials:HTTPAuthorizationCredentials
+        =Depends(security)
 ):
 
-    try:
+    token=credentials.credentials
 
-        payload=jwt.decode(
-            token,
-            SECRET_KEY,
-            algorithms=[ALGORITHM]
-        )
-
-        return payload
-
-    except JWTError:
+    if is_token_revoked(token):
 
         raise HTTPException(
             status_code=401,
-            detail="Invalid authentication token"
+            detail="Token revoked"
         )
 
+    payload=verify_token(token)
+
+    if not payload:
+
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid token"
+        )
+
+    return payload
 
 def get_admin_user(
     user=Depends(get_current_user)

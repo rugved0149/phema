@@ -60,5 +60,20 @@ SIGNAL_MAP = {
         "signal": "known_phishing_indicator",
         "confidence": 0.95,
         "severity": "high"
-    }
+    },
+    "Redirect parameter detected": {
+        "signal": "redirect_parameter_detected",
+        "confidence": 0.75,
+        "severity": "high"
+    },
+    "Redirect in fragment ": {
+        "signal": "fragment_redirect_detected",
+        "confidence": 0.8,
+        "severity": "high"
+    },
+    "Young domain age": {
+        "signal": "young_domain",
+        "confidence": 0.6,
+        "severity": "low"
+    },
 }

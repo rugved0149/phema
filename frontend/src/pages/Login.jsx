@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { loginUser } from "../api/auth";
+import { loginUser } from "../api/client";
 
 export default function Login(){
 
@@ -15,9 +15,9 @@ export default function Login(){
         password
       );
 
-      const token=res.data.access_token;
-      const role=res.data.role;
-      const userId=res.data.user_id;
+      const token=res.access_token;
+      const role=res.role;
+      const userId=res.user_id;
 
       localStorage.setItem(
         "token",
@@ -44,7 +44,10 @@ export default function Login(){
 
       }
 
-    }catch(e){
+    }
+    catch(e){
+
+      console.error(e);
 
       alert("Login failed");
 

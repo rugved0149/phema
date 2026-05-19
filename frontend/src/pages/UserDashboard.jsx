@@ -6,7 +6,8 @@ import UserSessionHistory from "../components/user/UserSessionHistory";
 import UserResultPanel from "../components/user/UserResultPanel";
 import UserAdvicePanel from "../components/user/UserAdvicePanel";
 import UserSessionSummary from "../components/user/UserSessionSummary";
-
+import LogoutButton from "../components/common/LogoutButton";
+import UserAlertsPanel from "../components/user/UserAlertsPanel";
 export default function UserDashboard(){
 
   const [identity,setIdentity]=useState(null);
@@ -35,6 +36,14 @@ export default function UserDashboard(){
         PHEMA User Portal
 
       </h1>
+
+        <div className="flex justify-end mb-6">
+          <LogoutButton/>
+        </div>
+        <UserAlertsPanel
+          userId={storedUserId}
+        />
+
 
       <UserIdentityPanel
 

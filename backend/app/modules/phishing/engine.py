@@ -3,10 +3,14 @@
 from app.modules.module_adapter import send_event
 from app.modules.phishing.core.analyzer import analyze
 from app.modules.phishing.core.parser import parse_url
+from app.modules.phishing.utils.redirect_resolver import resolve_redirect
 
 def run_phishing(user_id: str, session_id: str, url: str, entity_id: str):
 
-    parsed = parse_url(url)
+    resolved_url = resolve_redirect(url)
+
+    parsed = parse_url(resolved_url)
+    
     triggers = analyze(parsed)
 
     if not triggers:
@@ -39,6 +43,6 @@ def run_phishing(user_id: str, session_id: str, url: str, entity_id: str):
             metadata={
                 "category": category,
                 "rule": rule_name,
-                "url": url
+                "url": resolved_url
             }
         )

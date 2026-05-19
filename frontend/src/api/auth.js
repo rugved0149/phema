@@ -45,7 +45,7 @@ export async function loginUser(
   password
 ) {
 
-  return client.post(
+  const res = await client.post(
     "/auth/login",
     null,
     {
@@ -55,4 +55,33 @@ export async function loginUser(
       }
     }
   );
+
+  /* STORE TOKENS */
+
+  const access =
+    res.data.access_token;
+
+  const refresh =
+    res.data.refresh_token;
+
+  if (access) {
+
+    localStorage.setItem(
+      "token",
+      access
+    );
+
+  }
+
+  if (refresh) {
+
+    localStorage.setItem(
+      "refresh",
+      refresh
+    );
+
+  }
+
+  return res;
+
 }

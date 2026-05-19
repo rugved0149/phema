@@ -37,7 +37,7 @@ function ProtectedRoute({
     role !== roleRequired
   ) {
 
-    return <Navigate to="/user" />;
+    return <Navigate to="/login" />;
 
   }
 

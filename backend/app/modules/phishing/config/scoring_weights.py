@@ -24,6 +24,15 @@ SCORING_WEIGHTS = {
     # Obfuscation
     "Unicode / homograph domain": 30,
     "High entropy URL": 15,
+
+    #Redirects
+    "Redirect parameter": 20,
+
+    #Redirects in Fragment
+    "Redirect in fragment": 20,
+
+    #Young domain age
+    "Young domain age": 25,
 }
 
 # Category-wise saturation caps (prevents one class dominating)

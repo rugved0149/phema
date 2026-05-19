@@ -1,74 +1,76 @@
-from sqlalchemy import Column, String, Float, DateTime, JSON, Index
+from sqlalchemy import Column,String,Float,DateTime,JSON,Index,Integer
 from datetime import datetime
 from app.db.base import Base
 
 class EventRecord(Base):
-    __tablename__ = "events"
 
-    event_id = Column(
+    __tablename__="events"
+
+    event_id=Column(
         String,
         primary_key=True,
         index=True
     )
 
-    user_id = Column(
+    user_id=Column(
         String,
         index=True,
         nullable=False,
         default="system"
     )
 
-    session_id = Column(
+    session_id=Column(
         String,
         index=True,
         nullable=False,
         default="default"
     )
 
-    entity_id = Column(
+    entity_id=Column(
         String,
         index=True,
         nullable=False
     )
 
-    entity_type = Column(
+    entity_type=Column(
         String,
         index=True,
         nullable=False
     )
 
-    module = Column(
+    module=Column(
         String,
         index=True,
         nullable=False
     )
 
-    signal = Column(
+    signal=Column(
         String,
         index=True
     )
 
-    severity = Column(
+    severity=Column(
         String,
         index=True
     )
 
-    confidence = Column(
+    confidence=Column(
         Float,
         nullable=False
     )
 
-    event_metadata = Column(
+    event_metadata=Column(
         JSON,
         nullable=True
     )
 
-    timestamp = Column(
+    timestamp=Column(
         DateTime,
         default=datetime.utcnow,
         index=True,
         nullable=False
     )
+
 
 class AlertRecord(Base):
 
@@ -105,6 +107,41 @@ class AlertRecord(Base):
         DateTime,
         default=datetime.utcnow,
         index=True
+    )
+
+class AuditRecord(Base):
+
+    __tablename__="audit_logs"
+
+    audit_id=Column(
+        String,
+        primary_key=True,
+        index=True
+    )
+
+    user_id=Column(
+        String,
+        index=True
+    )
+
+    action=Column(
+        String,
+        index=True
+    )
+
+    endpoint=Column(
+        String
+    )
+
+    timestamp=Column(
+        DateTime,
+        default=datetime.utcnow,
+        index=True
+    )
+
+    audit_metadata=Column(
+        JSON,
+        nullable=True
     )
 
 class SessionRecord(Base):
@@ -220,6 +257,17 @@ class UserRecord(Base):
         default=datetime.utcnow
     )
 
+    failed_attempts=Column(
+        Integer,
+        default=0,
+        nullable=False
+    )
+
+    lock_until=Column(
+        DateTime,
+        nullable=True
+    )
+
 
 class OTPRecord(Base):
 
@@ -244,7 +292,37 @@ class OTPRecord(Base):
     created_at=Column(
         DateTime,
         default=datetime.utcnow
-    )    
+    )
+
+class RevokedToken(Base):
+
+    __tablename__="revoked_tokens"
+
+    token_id=Column(
+        String,
+        primary_key=True,
+        index=True
+    )
+
+    token=Column(
+        String,
+        unique=True,
+        nullable=False
+    )
+
+    revoked_at=Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+        index=True
+    )
+
+    expires_at=Column(
+        DateTime,
+        nullable=False,
+        index=True
+    )
+
 Index(
     "idx_entity_lookup",
     EventRecord.user_id,
